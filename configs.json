@@ -1,0 +1,26 @@
+{
+  "customer1": {
+    "LocalPath": "/local/path",
+    "RemotePath": "/remote/path",
+    "SftpServer": "sftp.example.com",
+    "SftpPort": "22",
+    "SftpUserName": "username",
+    "SftpPassword": "password",
+    "LogFilePath": "/path/to/logs",
+    "ArchivePath": "/path/to/archive",
+    "DeleteFoldersAfterArchive": true,
+    "FileExtensions": "txt,csv",
+    "CleanupThresholdDays": 90,
+    "UploadRootOnly": false,
+    "TempRemotePath": "/temp/path",
+    "UseTempFolder": true,
+    "NewExtension": ".bak",
+    "DownloadEnabled": true,
+    "DownloadRemotePath": "/download/path",
+    "DownloadLocalPath": "/download/local/path",
+    "DownloadFileExtensions": "txt,csv",
+    "DownloadRootOnly": false,
+    "DeleteRemoteFileAfterDownload": true,
+    "Schedule": "@daily"
+  }
+}
