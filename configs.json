@@ -5,7 +5,7 @@
     "SftpServer": "sftp.example.com",
     "SftpPort": "22",
     "SftpUserName": "username",
-    "SftpPassword": "password",
+    "SftpPassword": "ENCRYPTED_PASSWORD",
     "LogFilePath": "/path/to/logs",
     "ArchivePath": "/path/to/archive",
     "DeleteFoldersAfterArchive": true,
@@ -22,5 +22,29 @@
     "DownloadRootOnly": false,
     "DeleteRemoteFileAfterDownload": true,
     "Schedule": "@daily"
+  },
+  "customer2": {
+    "LocalPath": "/local/path",
+    "RemotePath": "/remote/path",
+    "SftpServer": "sftp.example.com",
+    "SftpPort": "22",
+    "SftpUserName": "username",
+    "SftpPassword": "ENCRYPTED_PASSWORD",
+    "LogFilePath": "/path/to/logs",
+    "ArchivePath": "/path/to/archive",
+    "DeleteFoldersAfterArchive": true,
+    "FileExtensions": "txt,csv",
+    "CleanupThresholdDays": 90,
+    "UploadRootOnly": false,
+    "TempRemotePath": "/temp/path",
+    "UseTempFolder": true,
+    "NewExtension": ".bak",
+    "DownloadEnabled": true,
+    "DownloadRemotePath": "/download/path",
+    "DownloadLocalPath": "/download/local/path",
+    "DownloadFileExtensions": "txt,csv",
+    "DownloadRootOnly": false,
+    "DeleteRemoteFileAfterDownload": true,
+    "Schedule": "@every 0h1m"
   }
 }

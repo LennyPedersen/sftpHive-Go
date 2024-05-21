@@ -25,3 +25,5 @@ go.work.sum
 # compiled binary
 sftphive-server
 sftphive
+
+logs/*.log

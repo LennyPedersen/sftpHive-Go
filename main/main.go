@@ -1,6 +1,10 @@
 package main
 
 import (
+    "crypto/aes"
+    "crypto/cipher"
+    "encoding/base64"
+    "errors"
     "flag"
     "fmt"
     "log"
@@ -18,6 +22,7 @@ import (
 var jobStatuses = make(map[string]string)
 
 func main() {
+    // Define flags
     customerName := flag.String("customer", "", "Customer name to run the SFTP job for")
     skipScheduler := flag.Bool("skip-scheduler", false, "Run only for the specified customer and skip the scheduler")
     flag.Parse()
@@ -40,6 +45,7 @@ func runSingleCustomer(customerName string) {
         log.Fatalf("Error loading configuration: %v", err)
     }
 
+    // Setup logging
     logFileName := fmt.Sprintf("%s.log", time.Now().Format("2006-01-02"))
     logFilePath := filepath.Join(config.LogFilePath, logFileName)
     logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
@@ -57,11 +63,13 @@ func runSingleCustomer(customerName string) {
 }
 
 func runWithScheduler() {
-    configs, err := config.LoadAllConfigs("configs.json")
+    // Load the entire configuration
+    configs, err := config.LoadAllConfigs("appsettings.json")
     if err != nil {
         log.Fatalf("Error loading configurations: %v", err)
     }
 
+    // Setup logging
     logFilePath := "service.log"
     logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
     if err != nil {
@@ -82,7 +90,7 @@ func runWithScheduler() {
             schedule = "@daily" // Default to daily if no schedule is provided
         }
 
-        config := customerConfig
+        config := customerConfig // Capture range variable
         _, err := c.AddFunc(schedule, func() {
             updateJobStatus(customerName, "Running")
             runSFTPJob(customerName, config, logStream)
@@ -102,6 +110,14 @@ func runWithScheduler() {
 }
 
 func runSFTPJob(customerName string, config config.Configuration, logStream *log.Logger) {
+    // Decrypt the SFTP password
+    key := "mysecretencryptionkey" // Must be 32 bytes long for AES-256
+    sftpPassword, err := decrypt(config.SftpPassword, key)
+    if err != nil {
+        logStream.Printf("Failed to decrypt SFTP password for %s: %v", customerName, err)
+        return
+    }
+
     // Convert SftpPort from string to int
     sftpPort, err := strconv.Atoi(config.SftpPort)
     if err != nil {
@@ -109,7 +125,7 @@ func runSFTPJob(customerName string, config config.Configuration, logStream *log
         return
     }
 
-    client, err := sftp.NewSFTPClient(config.SftpUserName, config.SftpPassword, config.SftpServer, sftpPort)
+    client, err := sftp.NewSFTPClient(config.SftpUserName, sftpPassword, config.SftpServer, sftpPort)
     if err != nil {
         logStream.Printf("Failed to connect to SFTP server for %s: %v", customerName, err)
         return
@@ -182,4 +198,29 @@ func deleteArchivedFiles(logStream *log.Logger, archivedFiles []string) error {
 
 func updateJobStatus(customerName, status string) {
     jobStatuses[customerName] = status
+}
+
+// Decrypt function
+func decrypt(cipherText, key string) (string, error) {
+    block, err := aes.NewCipher([]byte(key))
+    if err != nil {
+        return "", err
+    }
+
+    decodedCipherText, err := base64.URLEncoding.DecodeString(cipherText)
+    if err != nil {
+        return "", err
+    }
+
+    if len(decodedCipherText) < aes.BlockSize {
+        return "", errors.New("cipherText too short")
+    }
+
+    iv := decodedCipherText[:aes.BlockSize]
+    decodedCipherText = decodedCipherText[aes.BlockSize:]
+
+    stream := cipher.NewCFBDecrypter(block, iv)
+    stream.XORKeyStream(decodedCipherText, decodedCipherText)
+
+    return string(decodedCipherText), nil
 }
